@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from datetime import datetime
 import pytz
 
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None, **kwargs):
         if not (email and first_name and last_name):
@@ -46,6 +47,13 @@ class CustomUser(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+    def lose_attempt(self, attempts=1):
+        self.attempts -= attempts
+        self.save()
+
+    def enough_attempts(self):
+        return self.attempts > 0 or self.is_staff
 
 
 class Question(models.Model):
