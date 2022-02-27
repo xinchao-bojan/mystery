@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from datetime import datetime
-import pytz
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -30,6 +29,7 @@ class CustomUser(AbstractBaseUser):
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     attempts = models.PositiveIntegerField(default=3, verbose_name='Количество попыток')
+    finalist = models.BooleanField(default=False, verbose_name='Финалист')
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -62,12 +62,13 @@ class Question(models.Model):
                                          null=True)
     slug = models.SlugField(max_length=31, unique=True, verbose_name='Буквенный идентификатор')
     # previous_question = models.ForeignKey('Question', on_delete=models.CASCADE,related_name='subsequent_questions' )
+    final = models.BooleanField(default=False, verbose_name='Финальный вопрос')
 
 
 class UserAnswerInfo(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Пользователь')
     answer = models.ForeignKey('Answer', on_delete=models.CASCADE, verbose_name='Вопрос')
-    date = models.DateTimeField(default=datetime.now(tz=pytz.timezone('Europe/Moscow')))
+    date = models.DateTimeField(default=timezone.now)
 
 
 class Answer(models.Model):

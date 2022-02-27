@@ -7,18 +7,19 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
 from .models import Question, Answer, CustomUser, Prompt
 from .utils import is_question_enable
-from .serializers import QuestionBasicSerializer, AnswerSerializer, CustomUserSerializer, PromptSerializer
+from .serializers import QuestionSerializer, AnswerSerializer, CustomUserSerializer, PromptSerializer, \
+    QuestionAdminSerializer, AnswerAdminSerializer
 
 
 class ListQuestionView(generics.ListAPIView):
-    serializer_class = QuestionBasicSerializer
+    serializer_class = QuestionSerializer
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         questions = Question.objects.filter(previous_answer__user_list=request.user)
         q1 = Question.objects.filter(pk=1)
         questions = questions.union(q1)
-        serializer = QuestionBasicSerializer(questions.order_by('id'), many=True)
+        serializer = QuestionSerializer(questions.order_by('id'), many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -39,6 +40,9 @@ class AnswerView(generics.CreateAPIView):
                     answer = question.answers.filter(text=validator.validated_data.get('text').lower())
                     if answer:
                         answer.user_list.add(request.user)
+                        if answer.subsequent_question.final and CustomUser.objects.filter(finalist=True).count() < 100:
+                            request.user.finalist = True
+                            request.user.save()
                         return Response({'subsequent_question': answer.subsequent_question}, status=status.HTTP_200_OK)
                     return Response('Your answer is wrong', status=status.HTTP_400_BAD_REQUEST)
                 return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -47,13 +51,13 @@ class AnswerView(generics.CreateAPIView):
 
 
 class GetQuestionView(generics.RetrieveAPIView):
-    serializer_class = QuestionBasicSerializer
+    serializer_class = QuestionSerializer
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, slug=None):
         question = get_object_or_404(Question, slug=slug)
         if is_question_enable(question, request.user):
-            serializer = QuestionBasicSerializer(question)
+            serializer = QuestionSerializer(question)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -141,4 +145,46 @@ class ListPromptsView(generics.ListAPIView):
 class ListAllPromptsView(generics.ListAPIView):
     serializer_class = PromptSerializer
     permission_classes = (IsAdminUser,)
-    queryset = Prompt.objects.filter()
+    queryset = Prompt.objects.all()
+
+
+class ListAllQuestionView(generics.ListAPIView):
+    serializer_class = QuestionAdminSerializer
+    permission_classes = (IsAdminUser,)
+    queryset = Question.objects.all()
+
+
+class CreateQuestionView(generics.CreateAPIView):
+    serializer_class = QuestionSerializer
+    permission_classes = (IsAdminUser,)
+
+
+class AddAnswerView(generics.GenericAPIView):
+    serializer_class = AnswerAdminSerializer
+    permission_classes = (IsAdminUser,)
+
+    def post(self, request, slug):
+        question = get_object_or_404(Question, slug=slug)
+        data = request.data.copy()
+        data['question'] = question.pk
+        print(data)
+        validator = AnswerAdminSerializer(data=data)
+        if validator.is_valid():
+            instance = validator.save()
+            serializer = AnswerAdminSerializer(instance)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteAnswerView(generics.DestroyAPIView):
+    serializer_class = AnswerAdminSerializer
+    permission_classes = (IsAdminUser,)
+    queryset = Answer.objects.all()
+
+    def delete(self, request, slug=None, pk=None):
+        question = get_object_or_404(Question, slug=slug)
+        answer = question.answers.filter(pk=pk)
+        if answer:
+            answer.delete()
+            return Response('Deleted', status=status.HTTP_200_OK)
+        return Response('Wrong id', status=status.HTTP_404_NOT_FOUND)
