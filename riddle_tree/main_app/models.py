@@ -29,7 +29,8 @@ class CustomUser(AbstractBaseUser):
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     attempts = models.PositiveIntegerField(default=3, verbose_name='Количество попыток')
-    finalist = models.BooleanField(default=False, verbose_name='Финалист')
+    # finalist = models.BooleanField(default=False, verbose_name='Финалист')
+    promocode = models.CharField(max_length=8, verbose_name='Промокод', blank=True, null=True)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -78,6 +79,10 @@ class Answer(models.Model):
                                                blank=True, null=True, related_name='previous_answer')
     user_list = models.ManyToManyField(CustomUser, through=UserAnswerInfo,
                                        verbose_name='Список ответивших пользователей')
+
+    def save(self, *args, **kwargs):
+        self.text = self.text.lower()
+        super().save(*args, **kwargs)
 
 
 class Prompt(models.Model):

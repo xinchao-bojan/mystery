@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -6,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
 from .models import Question, Answer, CustomUser, Prompt
-from .utils import is_question_enable
+from .utils import is_question_enable, generate_code
 from .serializers import QuestionSerializer, AnswerSerializer, CustomUserSerializer, PromptSerializer, \
-    QuestionAdminSerializer, AnswerAdminSerializer
+    QuestionAdminSerializer, AnswerAdminSerializer, UserCodeSerializer
 
 
 class ListQuestionView(generics.ListAPIView):
@@ -40,9 +41,10 @@ class AnswerView(generics.CreateAPIView):
                     answer = question.answers.filter(text=validator.validated_data.get('text').lower())
                     if answer:
                         answer.user_list.add(request.user)
-                        if answer.subsequent_question.final and CustomUser.objects.filter(finalist=True).count() < 100:
-                            request.user.finalist = True
-                            request.user.save()
+                        if answer.subsequent_question.final and CustomUser.objects.filter(
+                                promocode__isnull=False).count() < 100:
+                            generate_code(request.user)
+                            return Response('You passed the game', status=status.HTTP_200_OK)
                         return Response({'subsequent_question': answer.subsequent_question}, status=status.HTTP_200_OK)
                     return Response('Your answer is wrong', status=status.HTTP_400_BAD_REQUEST)
                 return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -188,3 +190,12 @@ class DeleteAnswerView(generics.DestroyAPIView):
             answer.delete()
             return Response('Deleted', status=status.HTTP_200_OK)
         return Response('Wrong id', status=status.HTTP_404_NOT_FOUND)
+
+
+class GetPromocodeView(generics.RetrieveAPIView):
+    serializer_class = UserCodeSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        serializer = UserCodeSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

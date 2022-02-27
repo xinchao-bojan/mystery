@@ -47,8 +47,15 @@ class QuestionAdminSerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'first_name', 'last_name', 'attempts')
-        read_only_fields = ('id', 'email', 'first_name', 'last_name')
+        fields = ('id', 'email', 'first_name', 'last_name', 'attempts', 'promocode')
+        read_only_fields = ('id', 'email', 'first_name', 'last_name', 'promocode')
+
+
+class UserCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'first_name', 'last_name', 'promocode')
+        read_only_fields = ('id', 'email', 'first_name', 'last_name', 'promocode')
 
 
 class PromptSerializer(serializers.ModelSerializer):

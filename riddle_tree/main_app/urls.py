@@ -1,13 +1,14 @@
 from django.urls import path, include
 from .views import GetQuestionView, ListQuestionView, AnswerView, ListUserView, RestoreAttemptsView, \
     RestoreAttemptsForAllView, PromptCreateView, MakePromptVisibleView, ListPromptsView, ListAllPromptsView, \
-    CreateQuestionView, ListAllQuestionView, AddAnswerView, DeleteAnswerView
+    CreateQuestionView, ListAllQuestionView, AddAnswerView, DeleteAnswerView, GetPromocodeView
 
 urlpatterns = [
     path('question/<str:slug>/', GetQuestionView.as_view()),
     path('question/<str:slug>/answer/', AnswerView.as_view()),
     path('question/', ListQuestionView.as_view()),
     path('prompt/', ListPromptsView.as_view()),
+    path('me/', GetPromocodeView.as_view()),
 
     path('admin/users/', ListUserView.as_view()),
     path('admin/prompts/', ListAllPromptsView.as_view()),
