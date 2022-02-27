@@ -81,5 +81,10 @@ class Answer(models.Model):
 
 class Prompt(models.Model):
     question = models.OneToOneField(Question, on_delete=models.CASCADE, verbose_name='Вопрос')
-    file = models.FileField(upload_to='prompt', verbose_name='Файл с подсказкой')
+    file = models.FileField(upload_to='prompt', verbose_name='Файл с подсказкой', blank=True, null=True)
     visible = models.BooleanField(default=False, verbose_name='Видимость')
+    text = models.TextField(verbose_name='Текст подсказки')
+
+    def make_visibility(self):
+        self.visible = True
+        self.save()
