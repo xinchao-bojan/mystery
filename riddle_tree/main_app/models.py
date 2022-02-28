@@ -29,7 +29,6 @@ class CustomUser(AbstractBaseUser):
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     attempts = models.PositiveIntegerField(default=3, verbose_name='Количество попыток')
-    # finalist = models.BooleanField(default=False, verbose_name='Финалист')
     promocode = models.CharField(max_length=8, verbose_name='Промокод', blank=True, null=True)
 
     is_staff = models.BooleanField(default=False)
@@ -58,12 +57,22 @@ class CustomUser(AbstractBaseUser):
 
 
 class Question(models.Model):
+    STATUS_NODE = 1
+    STATUS_FINAL = 2
+    STATUS_DEADLOCK = 3
+    STATUS_FIRST = 4
+    STATUSES = (
+        (STATUS_NODE, 'Узел'),
+        (STATUS_FINAL, 'Финальный'),
+        (STATUS_DEADLOCK, 'Тупик'),
+        (STATUS_FIRST, 'Первый'),
+    )
     text = models.TextField(verbose_name='Текст вопроса')
     supporting_image = models.ImageField(upload_to='support', verbose_name='Вспомогательное изображение', blank=True,
                                          null=True)
     slug = models.SlugField(max_length=31, unique=True, verbose_name='Буквенный идентификатор')
-    # previous_question = models.ForeignKey('Question', on_delete=models.CASCADE,related_name='subsequent_questions' )
-    final = models.BooleanField(default=False, verbose_name='Финальный вопрос')
+    # final = models.BooleanField(default=False, verbose_name='Финальный вопрос')
+    status = models.PositiveIntegerField(choices=STATUSES,default=STATUS_NODE,verbose_name='Статус вопроса')
 
 
 class UserAnswerInfo(models.Model):

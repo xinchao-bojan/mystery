@@ -27,20 +27,23 @@ class AnswerAdminSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    answers = AnswerSerializer(many=True, read_only=True)
+    status = serializers.CharField(source='get_status_display')
+    # status = serializers.ChoiceField(choices=Question.STATUSES)
 
     class Meta:
         model = Question
-        fields = ('id', 'text', 'supporting_image', 'slug', 'answers', 'final')
+        fields = ('id', 'text', 'supporting_image', 'slug', 'status')
         read_only_fields = ('id',)
 
 
 class QuestionAdminSerializer(serializers.ModelSerializer):
     answers = AnswerAdminSerializer(many=True, read_only=True)
+    # status = serializers.CharField(source='get_status_display')
+    # status = serializers.ChoiceField(choices=Question.STATUSES)
 
     class Meta:
         model = Question
-        fields = ('id', 'text', 'supporting_image', 'slug', 'answers', 'final')
+        fields = ('id', 'text', 'supporting_image', 'slug', 'answers', 'status')
         read_only_fields = ('id',)
 
 
@@ -59,6 +62,8 @@ class UserCodeSerializer(serializers.ModelSerializer):
 
 
 class PromptSerializer(serializers.ModelSerializer):
+    question = serializers.SlugRelatedField(slug_field='slug', queryset=Question.objects.all())
+
     class Meta:
         model = Prompt
         fields = ('id', 'question', 'text', 'file')

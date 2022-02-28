@@ -1,9 +1,10 @@
 import random
 import string
+from .models import Question
 
 
 def is_question_enable(question=None, user=None):
-    return (question.id == 1) or (user in question.previous_answer.user_list.all())
+    return (question.status == Question.STATUS_FIRST) or (user in question.previous_answer.user_list.all())
 
 
 def generate_code(user):

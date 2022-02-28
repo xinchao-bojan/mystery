@@ -41,7 +41,7 @@ class AnswerView(generics.CreateAPIView):
                     answer = question.answers.filter(text=validator.validated_data.get('text').lower())
                     if answer:
                         answer.user_list.add(request.user)
-                        if answer.subsequent_question.final and CustomUser.objects.filter(
+                        if answer.subsequent_question.status == Question.STATUS_FINAL and CustomUser.objects.filter(
                                 promocode__isnull=False).count() < 100:
                             generate_code(request.user)
                             return Response('You passed the game', status=status.HTTP_200_OK)
@@ -144,6 +144,20 @@ class ListPromptsView(generics.ListAPIView):
     queryset = Prompt.objects.filter(visible=True)
 
 
+class GetPromptsView(generics.RetrieveAPIView):
+    serializer_class = PromptSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, slug):
+        question = get_object_or_404(Question, slug=slug)
+        if is_question_enable(question, request.user):
+            if question.prompt:
+                serializer = PromptSerializer(question.prompt)
+                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+            return Response('This question has not prompt', status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
 class ListAllPromptsView(generics.ListAPIView):
     serializer_class = PromptSerializer
     permission_classes = (IsAdminUser,)
@@ -157,7 +171,7 @@ class ListAllQuestionView(generics.ListAPIView):
 
 
 class CreateQuestionView(generics.CreateAPIView):
-    serializer_class = QuestionSerializer
+    serializer_class = QuestionAdminSerializer
     permission_classes = (IsAdminUser,)
 
 
@@ -199,3 +213,15 @@ class GetPromocodeView(generics.RetrieveAPIView):
     def get(self, request):
         serializer = UserCodeSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetStatusesView(generics.GenericAPIView):
+    permission_classes = (IsAdminUser,)
+
+    def get(self, request):
+        return Response({
+            Question.STATUS_NODE: 'Узел',
+            Question.STATUS_FINAL: 'Финальный',
+            Question.STATUS_DEADLOCK: 'Тупик',
+            Question.STATUS_FIRST: 'Первый',
+        }, status=status.HTTP_200_OK)
