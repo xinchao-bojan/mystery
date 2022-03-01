@@ -28,18 +28,16 @@ class AnswerAdminSerializer(serializers.ModelSerializer):
 
 class QuestionSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='get_status_display')
-    # status = serializers.ChoiceField(choices=Question.STATUSES)
+    previous_answer = serializers.SlugRelatedField(slug_field='text', read_only=True)
 
     class Meta:
         model = Question
-        fields = ('id', 'text', 'supporting_image', 'slug', 'status')
+        fields = ('id', 'text', 'supporting_image', 'slug', 'status', 'previous_answer')
         read_only_fields = ('id',)
 
 
 class QuestionAdminSerializer(serializers.ModelSerializer):
     answers = AnswerAdminSerializer(many=True, read_only=True)
-    # status = serializers.CharField(source='get_status_display')
-    # status = serializers.ChoiceField(choices=Question.STATUSES)
 
     class Meta:
         model = Question
