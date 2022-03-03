@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mystery:
+    build: .
+    command: sh -c " gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
+#    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/project/mystery
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+#  db:
+#    image: mysql:5.7
+#    ports:
+#      - '3306:3306'
+#    environment:
+#      MYSQL_DATABASE: 'mystery'
+#      MYSQL_USER: 'root'
+#      MYSQL_PASSWORD: 'root'
+#      MYSQL_ROOT_PASSWORD: 'root'
+#    restart: always
+#    volumes:
+#      - ./mystery:/var/lib/mysql
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mystery
+    ports:
+      - "3306:3306"
