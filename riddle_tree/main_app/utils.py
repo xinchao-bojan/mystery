@@ -12,8 +12,8 @@ def is_question_enable(question=None, user=None):
 
 
 def generate_code(user):
-    if user.promocode:
-        return
+    # if user.promocode:
+    #     return
     user.promocode = ''.join((random.choice(string.ascii_lowercase) for x in range(8)))
     user.save()
     html = render_to_string('email.html',

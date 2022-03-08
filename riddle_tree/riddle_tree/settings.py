@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'djoser',
     'corsheaders',
     'drf_yasg',
+    'django_celery_beat',
 
     'main_app',
 ]
@@ -82,14 +83,12 @@ WSGI_APPLICATION = 'riddle_tree.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-# if DEBUG:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': BASE_DIR / 'db.sqlite3',
-#         }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
-# else:
+# }
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -97,9 +96,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'root',
         'HOST': 'db',
-        # 'HOST': 'localhost',
         'PORT': '3306',
-        # 'PORT': '3307',
     }
 }
 
@@ -160,12 +157,11 @@ AUTH_USER_MODEL = 'main_app.CustomUser'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-# EMAIL_HOST_USER = 'mystery.from.mirea@gmail.com'
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-# EMAIL_HOST_PASSWORD = 'GvGR7u7gtf92GJt'
 EMAIL_USE_TLS = True
-# EMAIL_USE_SSL = True
+# CELERY_BROKER_URL = 'amqp://rabbitmq:rabbitmq@rabbitmq:15672'
+CELERY_BROKER_URL = 'amqp://rabbitmq:rabbitmq@rabbitmq:5672'
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 

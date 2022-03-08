@@ -1,28 +1,6 @@
 version: '3.8'
 
 services:
-  mystery:
-    build: .
-    command: sh -c " gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
-#    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/project/mystery
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-#  db:
-#    image: mysql:5.7
-#    ports:
-#      - '3306:3306'
-#    environment:
-#      MYSQL_DATABASE: 'mystery'
-#      MYSQL_USER: 'root'
-#      MYSQL_PASSWORD: 'root'
-#      MYSQL_ROOT_PASSWORD: 'root'
-#    restart: always
-#    volumes:
-#      - ./mystery:/var/lib/mysql
   db:
     image: mysql
     restart: always
@@ -31,3 +9,33 @@ services:
       MYSQL_DATABASE: mystery
     ports:
       - "3306:3306"
+
+  rabbitmq:
+    restart: always
+    image: "rabbitmq:3-management"
+    environment:
+      RABBITMQ_NODENAME: "rabbitmq@localhost"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+  setup:
+    build: .
+    command: sh -c "python manage.py migrate & celery -A riddle_tree beat  & celery -A riddle_tree worker "
+    depends_on:
+      - db
+      - rabbitmq
+
+  mystery:
+    build: .
+    command: sh -c " gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
+    #    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/project/mystery
+    ports:
+      - "8000:8000"
+    depends_on:
+      - setup
+

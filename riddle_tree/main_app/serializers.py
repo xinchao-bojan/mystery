@@ -2,6 +2,13 @@ from rest_framework import serializers
 from .models import Question, Answer, CustomUser, Prompt
 
 
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'first_name', 'last_name', 'attempts', 'promocode')
+        read_only_fields = ('id', 'email', 'first_name', 'last_name', 'promocode')
+
+
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
@@ -13,11 +20,12 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 class AnswerAdminSerializer(serializers.ModelSerializer):
     subsequent_question = serializers.SlugRelatedField(slug_field='slug', queryset=Question.objects.all())
+    user_list = CustomUserSerializer(many=True)
 
     class Meta:
         model = Answer
-        fields = ('id', 'question', 'text', 'subsequent_question')
-        read_only_fields = ('id',)
+        fields = ('id', 'question', 'text', 'subsequent_question', 'user_list')
+        read_only_fields = ('id', 'user_list')
         extra_kwargs = {'question': {'write_only': True}}
 
     def validate(self, attrs):
@@ -26,9 +34,17 @@ class AnswerAdminSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class PreviousAnswerSerializer(serializers.ModelSerializer):
+    question = serializers.SlugRelatedField(slug_field='slug', read_only=True)
+
+    class Meta:
+        model = Answer
+        fields = ('text', 'question')
+
+
 class QuestionSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='get_status_display')
-    previous_answer = serializers.SlugRelatedField(slug_field='text', read_only=True)
+    previous_answer = PreviousAnswerSerializer()
 
     class Meta:
         model = Question
@@ -43,13 +59,6 @@ class QuestionAdminSerializer(serializers.ModelSerializer):
         model = Question
         fields = ('id', 'text', 'supporting_image', 'slug', 'answers', 'status')
         read_only_fields = ('id',)
-
-
-class CustomUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ('id', 'email', 'first_name', 'last_name', 'attempts', 'promocode')
-        read_only_fields = ('id', 'email', 'first_name', 'last_name', 'promocode')
 
 
 class UserCodeSerializer(serializers.ModelSerializer):
