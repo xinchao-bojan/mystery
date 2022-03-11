@@ -6,12 +6,10 @@ from jose import jwt
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_migrate import Migrate
-from flask_login import LoginManager
 
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URL'] = 'mysql://root:root@db/main'
 # db= db in docker
-lm = LoginManager(app)
 CORS(app)
 # db = SQLAlchemy(app)
 
@@ -22,7 +20,6 @@ API_AUDIENCE = 'https://welcome/'
 ALGORITHMS = ["RS256"]
 
 
-# Error handler
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
