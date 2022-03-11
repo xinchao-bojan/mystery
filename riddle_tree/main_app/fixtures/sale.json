@@ -1,0 +1,26 @@
+[
+  {
+    "model": "main_app.sale",
+    "pk": 1,
+    "fields": {
+      "text": "Скидка 50% на весь заказ",
+      "max_users": 0
+    }
+  },
+  {
+    "model": "main_app.sale",
+    "pk": 2,
+    "fields": {
+      "text": "Фирменная пицца в подарок при заказе от 800р",
+      "max_users": 200
+    }
+  },
+  {
+    "model": "main_app.sale",
+    "pk": 3,
+    "fields": {
+      "text": "Фирменный молочный коктейль в подарок к пицце",
+      "max_users": 300
+    }
+  }
+]

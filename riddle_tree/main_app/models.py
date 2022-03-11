@@ -29,7 +29,8 @@ class CustomUser(AbstractBaseUser):
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     attempts = models.PositiveIntegerField(default=3, verbose_name='Количество попыток')
-    promocode = models.CharField(max_length=8, verbose_name='Промокод', blank=True, null=True)
+    # promocode = models.CharField(max_length=8, verbose_name='Промокод', blank=True, null=True)
+    # promocode = models.ForeignKey('Promocode', on_delete=models.CASCADE, verbose_name='Промокод', null=True, blank=True)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -49,11 +50,23 @@ class CustomUser(AbstractBaseUser):
         return True
 
     def lose_attempt(self, attempts=1):
-        self.attempts -= attempts
+        self.attempts = max(self.attempts - 1, 0)
         self.save()
 
     def enough_attempts(self):
         return self.attempts > 0 or self.is_staff
+
+
+class Sale(models.Model):
+    text = models.CharField(max_length=255, verbose_name='Описание акции')
+    max_users = models.PositiveIntegerField(verbose_name='Максимальное количество пользователей')
+
+
+class Promocode(models.Model):
+    text = models.CharField(max_length=8, verbose_name='Промокод', blank=True, null=True)
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, verbose_name='Скидка')
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, verbose_name='Пользователь',
+                                related_name='promocode', null=True, blank=True)
 
 
 class Question(models.Model):
@@ -71,8 +84,7 @@ class Question(models.Model):
     supporting_image = models.ImageField(upload_to='support', verbose_name='Вспомогательное изображение', blank=True,
                                          null=True)
     slug = models.SlugField(max_length=31, unique=True, verbose_name='Буквенный идентификатор')
-    # final = models.BooleanField(default=False, verbose_name='Финальный вопрос')
-    status = models.PositiveIntegerField(choices=STATUSES,default=STATUS_NODE,verbose_name='Статус вопроса')
+    status = models.PositiveIntegerField(choices=STATUSES, default=STATUS_NODE, verbose_name='Статус вопроса')
 
 
 class UserAnswerInfo(models.Model):
@@ -90,7 +102,7 @@ class Answer(models.Model):
                                        verbose_name='Список ответивших пользователей')
 
     def save(self, *args, **kwargs):
-        self.text = self.text.lower()
+        self.text = self.text.capitalize()
         super().save(*args, **kwargs)
 
 

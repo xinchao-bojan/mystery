@@ -1,0 +1,92 @@
+[
+  {
+    "model": "main_app.answer",
+    "pk": 1,
+    "fields": {
+      "question": 1,
+      "text": "Италия",
+      "subsequent_question": 5
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 2,
+    "fields": {
+      "question": 1,
+      "text": "Германия",
+      "subsequent_question": 2
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 3,
+    "fields": {
+      "question": 1,
+      "text": "Испания",
+      "subsequent_question": 3
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 4,
+    "fields": {
+      "question": 2,
+      "text": "Haribo",
+      "subsequent_question": 4
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 5,
+    "fields": {
+      "question": 3,
+      "text": "Африка",
+      "subsequent_question": 6
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 6,
+    "fields": {
+      "question": 7,
+      "text": "Дора",
+      "subsequent_question": 8
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 7,
+    "fields": {
+      "question": 8,
+      "text": "Вернадский",
+      "subsequent_question": 9
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 8,
+    "fields": {
+      "question": 9,
+      "text": "78",
+      "subsequent_question": 10
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 9,
+    "fields": {
+      "question": 10,
+      "text": "Пицца",
+      "subsequent_question": 11
+    }
+  },
+  {
+    "model": "main_app.answer",
+    "pk": 10,
+    "fields": {
+      "question": 5,
+      "text": "Кафе",
+      "subsequent_question": 7
+    }
+  }
+]

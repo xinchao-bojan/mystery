@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
 from .models import Question, Answer, CustomUser, Prompt
-from .utils import is_question_enable, generate_code
+from .utils import is_question_enable, generate_code, promocodes_available
 from .serializers import QuestionSerializer, AnswerSerializer, CustomUserSerializer, PromptSerializer, \
     QuestionAdminSerializer, AnswerAdminSerializer, UserCodeSerializer
 
@@ -38,17 +38,18 @@ class AnswerView(generics.CreateAPIView):
                 validator = AnswerSerializer(data=data)
                 if validator.is_valid():
                     request.user.lose_attempt()
-                    answer = question.answers.filter(text=validator.validated_data.get('text').lower())
+                    answer = question.answers.filter(text=validator.validated_data.get('text').capitalize())
                     if answer:
+                        answer = answer.last()
                         answer.user_list.add(request.user)
-                        if answer.subsequent_question.status == Question.STATUS_FINAL and CustomUser.objects.filter(
-                                promocode__isnull=False).count() < 100:
-                            generate_code(request.user)
+                        avalable_promocodes = promocodes_available()
+                        if answer.subsequent_question.status == Question.STATUS_FINAL and avalable_promocodes:
+                            generate_code(request.user, avalable_promocodes)
                             return Response('You passed the game', status=status.HTTP_200_OK)
-                        return Response({'subsequent_question': answer.subsequent_question}, status=status.HTTP_200_OK)
+                        return Response(QuestionSerializer(answer.subsequent_question).data, status=status.HTTP_200_OK)
                     return Response('Your answer is wrong', status=status.HTTP_400_BAD_REQUEST)
                 return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response('You have run out of attempts ', status=status.HTTP_400_BAD_REQUEST)
+            return Response('You have ran out of attempts ', status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
