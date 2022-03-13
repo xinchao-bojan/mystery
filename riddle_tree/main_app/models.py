@@ -60,6 +60,7 @@ class CustomUser(AbstractBaseUser):
 class Sale(models.Model):
     text = models.CharField(max_length=255, verbose_name='Описание акции')
     max_users = models.PositiveIntegerField(verbose_name='Максимальное количество пользователей')
+    slug = models.SlugField(max_length=31, unique=True, verbose_name='Буквенный идентификатор')
 
 
 class Promocode(models.Model):
@@ -67,6 +68,8 @@ class Promocode(models.Model):
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, verbose_name='Скидка')
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, verbose_name='Пользователь',
                                 related_name='promocode', null=True, blank=True)
+    active = models.BooleanField(default=True, verbose_name='Активный')
+    qr = models.ImageField(upload_to='qr', verbose_name='Qr код', blank=True, null=True)
 
 
 class Question(models.Model):

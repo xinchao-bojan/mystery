@@ -4,7 +4,8 @@
     "pk": 1,
     "fields": {
       "text": "Скидка 50% на весь заказ",
-      "max_users": 0
+      "max_users": 0,
+      "slug": "50%"
     }
   },
   {
@@ -12,7 +13,8 @@
     "pk": 2,
     "fields": {
       "text": "Фирменная пицца в подарок при заказе от 800р",
-      "max_users": 200
+      "max_users": 200,
+      "slug": "free_pizza800"
     }
   },
   {
@@ -20,7 +22,8 @@
     "pk": 3,
     "fields": {
       "text": "Фирменный молочный коктейль в подарок к пицце",
-      "max_users": 300
+      "max_users": 300,
+      "slug": "pizzadrink"
     }
   }
 ]

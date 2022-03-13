@@ -1,20 +1,16 @@
-from config import app,jsonify,requires_auth
+from config import app, jsonify, requires_auth
+from producer import publish
 from flask_cors import cross_origin
+from flask import request
+import json
 
 
-@app.route("/api/public")
-@cross_origin(headers=["Content-Type", "Authorization"])
-def public():
-    response = "Hello from a public endpoint! You don't need to be authenticated to see this."
-    return jsonify(message=response)
-
-
-# This needs authentication
-@app.route("/api/private")
+@app.route("/api/generate_qr", methods=['GET'])
 @cross_origin(headers=["Content-Type", "Authorization"])
 @requires_auth
-def private():
-    response = "Hello from a private endpoint! You need to be authenticated to see this."
+def promocode_info():
+    response = publish('generate_qr', json.dumps(
+        {'promocode': request.args.get('promocode'), 'cashier': request.headers.get('Authorization')}))
     return jsonify(message=response)
 
 

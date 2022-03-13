@@ -58,7 +58,6 @@ class GetQuestionView(generics.RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, slug=None):
-        print(Question.objects.filter(slug=slug))
         question = get_object_or_404(Question, slug=slug)
         if is_question_enable(question, request.user):
             serializer = QuestionSerializer(question)
@@ -185,7 +184,6 @@ class AddAnswerView(generics.GenericAPIView):
         question = get_object_or_404(Question, slug=slug)
         data = request.data.copy()
         data['question'] = question.pk
-        print(data)
         validator = AnswerAdminSerializer(data=data)
         if validator.is_valid():
             instance = validator.save()

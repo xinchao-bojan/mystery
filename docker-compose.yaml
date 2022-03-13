@@ -7,8 +7,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: mystery
-#    ports:
-#      - "3306:3306"
     expose:
       - 3306
 
@@ -20,36 +18,49 @@ services:
       RABBITMQ_DEFAULT_USER: "rabbitmq"
       RABBITMQ_DEFAULT_PASS: "rabbitmq"
       RABBITMQ_DEFAULT_VHOST: "/"
-#    ports:
-#      - "15672:15672"
-#      - "5672:5672"
     expose:
       - 5672
       - 15672
+
   setup:
     build: ./riddle_tree
-    command: sh -c "python manage.py migrate & celery -A riddle_tree beat  & celery -A riddle_tree worker "
+    command: sh -c "celery -A riddle_tree beat  & celery -A riddle_tree worker"
+    volumes:
+      - ./riddle_tree:/project/mystery
     depends_on:
       - db
       - rabbitmq
+    restart: on-failure
+
+  consumer:
+    build: ./riddle_tree
+    command: sh -c "python consumer.py "
+    volumes:
+      - ./riddle_tree:/project/mystery
+    depends_on:
+      - db
+      - rabbitmq
+      - setup
+    restart: on-failure
 
   mystery:
     build: ./riddle_tree
-    command: sh -c " gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
-    #    command: python manage.py runserver 0.0.0.0:8000
+    command: sh -c "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
     volumes:
       - ./riddle_tree:/project/mystery
     ports:
       - "8000:8000"
     depends_on:
       - setup
+    restart: always
 
   cashier:
     build: ./cashier
     command: 'python app.py'
     volumes:
-      - ./cashier:/project/mystery
+      - ./cashier:/project/cashier
     ports:
       - "5000:5000"
     depends_on:
       - setup
+    restart: always

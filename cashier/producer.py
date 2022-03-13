@@ -6,6 +6,5 @@ connection = pika.BlockingConnection(params)
 channel = connection.channel()
 
 
-def publish(key, method, body):
-    properties = pika.BasicProperties(method)
-    channel.basic_publish(exchange='', routing_key=key, body=body, properties=properties)
+def publish(key, body):
+    channel.basic_publish(exchange='', routing_key=key, body=body)

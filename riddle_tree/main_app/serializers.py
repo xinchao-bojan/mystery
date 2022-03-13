@@ -1,8 +1,10 @@
 from rest_framework import serializers
-from .models import Question, Answer, CustomUser, Prompt
+from .models import Question, Answer, CustomUser, Prompt, Promocode
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    promocode = serializers.SlugRelatedField(slug_field='text', read_only=True)
+
     class Meta:
         model = CustomUser
         fields = ('id', 'email', 'first_name', 'last_name', 'attempts', 'promocode')
@@ -62,6 +64,8 @@ class QuestionAdminSerializer(serializers.ModelSerializer):
 
 
 class UserCodeSerializer(serializers.ModelSerializer):
+    promocode = serializers.SlugRelatedField(slug_field='text', read_only=True)
+
     class Meta:
         model = CustomUser
         fields = ('id', 'email', 'first_name', 'last_name', 'promocode')
@@ -74,4 +78,14 @@ class PromptSerializer(serializers.ModelSerializer):
     class Meta:
         model = Prompt
         fields = ('id', 'question', 'text', 'file')
+        read_only_fields = ('id',)
+
+
+class PromocodeSerializer(serializers.ModelSerializer):
+    sale = serializers.SlugRelatedField(slug_field='text', read_only=True)
+    user = serializers.SlugRelatedField(slug_field='email', read_only=True)
+
+    class Meta:
+        model = Promocode
+        fields = ('id', 'text', 'sale', 'user')
         read_only_fields = ('id',)
