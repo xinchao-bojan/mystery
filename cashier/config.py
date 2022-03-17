@@ -3,17 +3,10 @@ from six.moves.urllib.request import urlopen
 from functools import wraps
 from flask import Flask, request, jsonify, _request_ctx_stack
 from jose import jwt
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_migrate import Migrate
 
 app = Flask(__name__)
-# app.config['SQLALCHEMY_DATABASE_URL'] = 'mysql://root:root@db/main'
-# db= db in docker
 CORS(app)
-# db = SQLAlchemy(app)
-
-# migrate = Migrate(app, db)
 
 AUTH0_DOMAIN = 'suroegin503.eu.auth0.com'
 API_AUDIENCE = 'https://welcome/'

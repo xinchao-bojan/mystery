@@ -9,9 +9,13 @@ import json
 @cross_origin(headers=["Content-Type", "Authorization"])
 @requires_auth
 def promocode_info():
-    response = publish('generate_qr', json.dumps(
-        {'promocode': request.args.get('promocode'), 'cashier': request.headers.get('Authorization')}))
-    return jsonify(message=response)
+    try:
+        publish('generate_qr', json.dumps(
+            {'promocode': request.args.get('promocode'), 'cashier': request.headers.get('Authorization')}))
+    except Exception as e:
+        print(e)
+        return jsonify(message='Something went wrong, try again later')
+    return jsonify(message='Check out your account in mystery')
 
 
 if __name__ == '__main__':

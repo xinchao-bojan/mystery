@@ -6,12 +6,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'riddle_tree.settings')
 django.setup()
 from main_app.models import Promocode
 
-credentials = pika.PlainCredentials('rabbitmq', 'rabbitmq')
-params = pika.ConnectionParameters('rabbitmq', 5672, '/', credentials)
-connection = pika.BlockingConnection(params)
-channel = connection.channel()
-channel.queue_declare(queue='generate_qr')
-
 
 def generate_qr(channel, method, properties, body):
     data = json.loads(body)
@@ -32,9 +26,16 @@ def generate_qr(channel, method, properties, body):
         promocode.save()
 
 
-channel.basic_consume(queue='generate_qr', on_message_callback=generate_qr, auto_ack=True)
+if __name__ == '__main__':
+    credentials = pika.PlainCredentials('rabbitmq', 'rabbitmq')
+    params = pika.ConnectionParameters('rabbitmq', 5672, '/', credentials)
+    connection = pika.BlockingConnection(params)
+    channel = connection.channel()
+    channel.queue_declare(queue='generate_qr')
 
-print('Started consuming')
+    channel.basic_consume(queue='generate_qr', on_message_callback=generate_qr, auto_ack=True)
 
-channel.start_consuming()
-channel.close()
+    print('Started consuming')
+
+    channel.start_consuming()
+    channel.close()

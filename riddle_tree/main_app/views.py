@@ -2,14 +2,16 @@ from django.db.models import Q
 from django.shortcuts import render
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets, parsers
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
-from .models import Question, Answer, CustomUser, Prompt
+from .models import Question, Answer, CustomUser, Prompt, Sale
 from .utils import is_question_enable, generate_code, promocodes_available
 from .serializers import QuestionSerializer, AnswerSerializer, CustomUserSerializer, PromptSerializer, \
-    QuestionAdminSerializer, AnswerAdminSerializer, UserCodeSerializer
+    QuestionRetrieveAdminSerializer, QuestionListAdminSerializer, AnswerAdminSerializer, UserCodeSerializer, \
+    SaleSerializer, QuestionUpdateAdminSerializer
+from .swagger_serializers import AdminQuestionPost, AnswerQuestion, AddAnswer, AddPrompt, RestoreAttempts
 
 
 class ListQuestionView(generics.ListAPIView):
@@ -25,7 +27,7 @@ class ListQuestionView(generics.ListAPIView):
 
 
 class AnswerView(generics.CreateAPIView):
-    serializer_class = AnswerSerializer
+    serializer_class = AnswerQuestion
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, slug=None):
@@ -38,7 +40,7 @@ class AnswerView(generics.CreateAPIView):
                 validator = AnswerSerializer(data=data)
                 if validator.is_valid():
                     request.user.lose_attempt()
-                    answer = question.answers.filter(text=validator.validated_data.get('text').capitalize())
+                    answer = question.answers.filter(text=validator.validated_data.get('text').strip().capitalize())
                     if answer:
                         answer = answer.last()
                         answer.user_list.add(request.user)
@@ -72,7 +74,7 @@ class ListUserView(generics.ListAPIView):
 
 
 class RestoreAttemptsView(generics.GenericAPIView):
-    serializer_class = CustomUserSerializer
+    serializer_class = RestoreAttempts
     permission_classes = (IsAdminUser,)
 
     def put(self, request, pk=None):
@@ -86,7 +88,7 @@ class RestoreAttemptsView(generics.GenericAPIView):
 
 
 class RestoreAttemptsForAllView(generics.GenericAPIView):
-    serializer_class = CustomUserSerializer
+    serializer_class = RestoreAttempts
     permission_classes = (IsAdminUser,)
 
     def put(self, request):
@@ -99,15 +101,15 @@ class RestoreAttemptsForAllView(generics.GenericAPIView):
 
 
 class PromptCreateView(generics.GenericAPIView):
-    serializer_class = PromptSerializer
+    serializer_class = AddPrompt
     permission_classes = (IsAdminUser,)
+    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.FileUploadParser)
 
     def post(self, request, slug=None):
-        request.data_mutable = True
-        data = request.data.copy()
-        data['question'] = get_object_or_404(Question, slug=slug).pk
-        validator = PromptSerializer(data=data)
-        if validator.is_valid():
+        question = get_object_or_404(Question, slug=slug)
+        request.data['question'] = question.slug
+        validator = PromptSerializer(data=request.data)
+        if validator.is_valid() and not Prompt.objects.filter(question=question):
             instance = validator.save()
             serializer = PromptSerializer(instance)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -115,9 +117,8 @@ class PromptCreateView(generics.GenericAPIView):
 
     def put(self, request, slug=None):
         question = get_object_or_404(Question, slug=slug)
-        data = request.data.copy()
-        data['question'] = question.pk
-        validator = PromptSerializer(question.prompt, data=data, partial=True)
+        request.data['question'] = question.slug
+        validator = PromptSerializer(question.prompt, data=request.data, partial=True)
         if validator.is_valid():
             instance = validator.save()
             serializer = PromptSerializer(instance)
@@ -126,8 +127,11 @@ class PromptCreateView(generics.GenericAPIView):
 
     def delete(self, request, slug):
         question = get_object_or_404(Question, slug=slug)
-        question.prompt.delete()
-        return Response(status=status.HTTP_202_ACCEPTED)
+        if Prompt.objects.filter(question=question):
+            question = get_object_or_404(Question, slug=slug)
+            question.prompt.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response('Prompt isn\'t exist', status=status.HTTP_404_NOT_FOUND)
 
 
 class MakePromptVisibleView(generics.GenericAPIView):
@@ -143,6 +147,12 @@ class ListPromptsView(generics.ListAPIView):
     serializer_class = PromptSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Prompt.objects.filter(visible=True)
+
+    def get(self, request):
+        queryset = self.queryset.filter(
+            Q(question__previous_answer__user_list=request.user) | Q(question__status=Question.STATUS_FIRST))
+        serializer = PromptSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetPromptsView(generics.RetrieveAPIView):
@@ -165,19 +175,27 @@ class ListAllPromptsView(generics.ListAPIView):
     queryset = Prompt.objects.all()
 
 
-class ListAllQuestionView(generics.ListAPIView):
-    serializer_class = QuestionAdminSerializer
+class UpdateAnswerView(generics.DestroyAPIView):
+    serializer_class = AnswerAdminSerializer
     permission_classes = (IsAdminUser,)
-    queryset = Question.objects.all()
 
-
-class CreateQuestionView(generics.CreateAPIView):
-    serializer_class = QuestionAdminSerializer
-    permission_classes = (IsAdminUser,)
+    def put(self, request, slug=None, pk=None):
+        question = get_object_or_404(Question, slug=slug)
+        data = request.data.copy()
+        data['question'] = question.pk
+        answer = question.answers.filter(id=pk)
+        if answer:
+            validator = AnswerAdminSerializer(answer.last(), data=data, partial=True)
+            if validator.is_valid():
+                instance = validator.save()
+                serializer = AnswerAdminSerializer(instance)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response('This answer is not existing', status=status.HTTP_404_NOT_FOUND)
 
 
 class AddAnswerView(generics.GenericAPIView):
-    serializer_class = AnswerAdminSerializer
+    serializer_class = AddAnswer
     permission_classes = (IsAdminUser,)
 
     def post(self, request, slug):
@@ -225,3 +243,41 @@ class GetStatusesView(generics.GenericAPIView):
             Question.STATUS_DEADLOCK: 'Тупик',
             Question.STATUS_FIRST: 'Первый',
         }, status=status.HTTP_200_OK)
+
+
+class SaleViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAdminUser,)
+    serializer_class = SaleSerializer
+    queryset = Sale.objects.all()
+    http_method_names = ('post', 'get', 'put', 'delete', 'head')
+
+
+class AdminQuestionViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAdminUser,)
+    queryset = Question.objects.all()
+    http_method_names = ('post', 'get', 'put', 'delete', 'head')
+    lookup_field = "slug"
+    serializers = {
+        'default': QuestionRetrieveAdminSerializer,
+        'update': QuestionUpdateAdminSerializer,
+        'create': AdminQuestionPost,
+        'list': QuestionListAdminSerializer,
+    }
+    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.FileUploadParser)
+
+    def get_serializer_class(self):
+        return self.serializers.get(self.action, self.serializers['default'])
+
+    def create(self, request):
+        validator = QuestionRetrieveAdminSerializer(data=request.data)
+        if validator.is_valid():
+            instance = validator.save()
+            serializer = QuestionRetrieveAdminSerializer(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserView(generics.RetrieveAPIView):
+    serializer_class = CustomUserSerializer
+    permission_classes = (IsAdminUser,)
+    queryset = CustomUser.objects.filter(is_staff=False, is_active=True)

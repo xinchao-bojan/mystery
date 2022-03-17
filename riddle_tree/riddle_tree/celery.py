@@ -12,7 +12,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.conf.beat_schedule = {
     'update_attempts': {
         'task': 'main_app.tasks.update_attempts',
-        'schedule': crontab(minute=0,hour=0),
+        'schedule': crontab(minute=0, hour=0),
+    },
+    'release_prompt': {
+        'task': 'main_app.tasks.release_prompt',
+        'schedule': crontab(day_of_week=3),
     }
 }
 app.autodiscover_tasks()
