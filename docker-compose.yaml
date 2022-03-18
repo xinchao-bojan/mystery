@@ -1,5 +1,5 @@
 version: '3.8'
-
+### закомментированные строчки используются для сборки проекта
 services:
   db:
     image: mysql
@@ -24,10 +24,11 @@ services:
 
 
   mystery:
-    build: ./riddle_tree
-    command: sh -c "python manage.py migrate && python manage.py collectstatic --noiput && celery -A riddle_tree beat  & celery -A riddle_tree worker & python consumer.py & gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
-    volumes:
-      - ./riddle_tree:/project/mystery
+#    build: ./riddle_tree
+    image: xinchaobojan/riddle_tree
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && celery -A riddle_tree beat  & celery -A riddle_tree worker & python consumer.py & gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
+#    volumes:
+#      - ./riddle_tree:/project/mystery
     ports:
       - "8000:8000"
     depends_on:
@@ -37,10 +38,11 @@ services:
     restart: always
 
   cashier:
-    build: ./cashier
+    image: xinchaobojan/cashier
+#    build: ./cashier
     command: 'python app.py'
-    volumes:
-      - ./cashier:/project/cashier
+#    volumes:
+#      - ./cashier:/project/cashier
     ports:
       - "5000:5000"
     depends_on:
