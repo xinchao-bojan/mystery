@@ -7,6 +7,11 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: mystery
+    healthcheck:
+        test: ['CMD', 'mysqladmin', '-uroot', '-proot', 'ping', '-h', 'db']
+        interval: 30s
+        timeout: 10s
+        retries: 5
     expose:
       - 3306
 
@@ -22,7 +27,6 @@ services:
       - 5672
       - 15672
 
-
   mystery:
 #    build: ./riddle_tree
     image: xinchaobojan/riddle_tree
@@ -32,8 +36,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_healthy
 
     restart: always
 
