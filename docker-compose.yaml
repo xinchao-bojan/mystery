@@ -26,7 +26,7 @@ services:
   mystery:
 #    build: ./riddle_tree
     image: xinchaobojan/riddle_tree
-    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && celery -A riddle_tree beat  & celery -A riddle_tree worker & python consumer.py & gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
+    command: sh -c "python manage.py collectstatic --noinput && python manage.py migrate && celery -A riddle_tree beat  & celery -A riddle_tree worker & python consumer.py & gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
 #    volumes:
 #      - ./riddle_tree:/project/mystery
     ports:
