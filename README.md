@@ -30,6 +30,12 @@ docker-compose up -d
 ```cmd
 docker-compose exec mystery python manage.py migrate
 ```
+4. Фикстуры вопросов, ответов и скидок можно загрузить следующими командами
+```cmd
+docker-compose exec mystery python manage.py loaddata question
+docker-compose exec mystery python manage.py loaddata answers
+docker-compose exec mystery python manage.py loaddata sale
+```
 После старта проекта api будут доступны на [localhost:8000](http://localhost:8000)
 и [localhost:5000](http://localhost:5000)
 
