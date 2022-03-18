@@ -6,7 +6,7 @@ class AdminQuestionPost(serializers.Serializer):
     text = serializers.CharField(min_length=1)
     slug = serializers.CharField(min_length=1, max_length=31)
     status = serializers.ChoiceField(choices=Question.STATUSES)
-    supporting_image = serializers.ImageField()
+    supporting_image = serializers.ImageField(required=False)
 
 
 class AnswerQuestion(serializers.Serializer):

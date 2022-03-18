@@ -24,9 +24,10 @@ def generate_qr(channel, method, properties, body):
         promocode.qr = ImageFile(buf, name=f'{promocode.user.email}.jpg')
         promocode.active = False
         promocode.save()
+    return promocode
 
 
-if __name__ == '__main__':
+def main():
     credentials = pika.PlainCredentials('rabbitmq', 'rabbitmq')
     params = pika.ConnectionParameters('rabbitmq', 5672, '/', credentials)
     connection = pika.BlockingConnection(params)
@@ -39,3 +40,12 @@ if __name__ == '__main__':
 
     channel.start_consuming()
     channel.close()
+
+
+if __name__ == '__main__':
+    while True:
+        try:
+            main()
+            break
+        except:
+            pass

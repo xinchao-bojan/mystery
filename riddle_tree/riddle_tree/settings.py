@@ -83,12 +83,7 @@ WSGI_APPLICATION = 'riddle_tree.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -160,7 +155,6 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
-# CELERY_BROKER_URL = 'amqp://rabbitmq:rabbitmq@rabbitmq:15672'
 CELERY_BROKER_URL = 'amqp://rabbitmq:rabbitmq@rabbitmq:5672'
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/

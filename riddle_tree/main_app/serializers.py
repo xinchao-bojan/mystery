@@ -22,7 +22,6 @@ class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
         fields = ('id', 'question', 'text')
-        # fields = '__all__'
         read_only_fields = ('id',)
         extra_kwargs = {'question': {'write_only': True}}
 
@@ -30,13 +29,12 @@ class AnswerSerializer(serializers.ModelSerializer):
 class AnswerAdminSerializer(serializers.ModelSerializer):
     subsequent_question = serializers.SlugRelatedField(slug_field='slug', queryset=Question.objects.all())
 
-    # user_list = CustomUserSerializer(many=True,read_only=True)
 
     class Meta:
         model = Answer
         fields = ('id', 'question', 'text', 'subsequent_question', 'user_list')
         read_only_fields = ('id', 'user_list')
-        extra_kwargs = {'question': {'write_only': True}}
+        extra_kwargs = {'question': {'write_only': True}, 'subsequent_question': {'required': False}}
 
     def validate(self, attrs):
         if attrs.get('subsequent_question') == attrs.get('question'):
@@ -116,11 +114,6 @@ class PromptSerializer(serializers.ModelSerializer):
         fields = ('id', 'question', 'text', 'file', 'visible')
         read_only_fields = ('id',)
         extra_kwargs = {'visible': {'required': False}}
-
-    # def validate(self, attrs):
-    #     if Prompt.objects.filter(question=attrs.get('question')):
-    #         raise serializers.ValidationError('Question already has prompt')
-    #     return attrs
 
 
 class SaleSerializer(serializers.ModelSerializer):

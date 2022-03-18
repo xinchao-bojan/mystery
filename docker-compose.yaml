@@ -22,36 +22,18 @@ services:
       - 5672
       - 15672
 
-  setup:
-    build: ./riddle_tree
-    command: sh -c "celery -A riddle_tree beat  & celery -A riddle_tree worker"
-    volumes:
-      - ./riddle_tree:/project/mystery
-    depends_on:
-      - db
-      - rabbitmq
-    restart: on-failure
-
-  consumer:
-    build: ./riddle_tree
-    command: sh -c "python consumer.py "
-    volumes:
-      - ./riddle_tree:/project/mystery
-    depends_on:
-      - db
-      - rabbitmq
-      - setup
-    restart: on-failure
 
   mystery:
     build: ./riddle_tree
-    command: sh -c "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noiput && celery -A riddle_tree beat  & celery -A riddle_tree worker & python consumer.py & gunicorn --bind 0.0.0.0:8000 riddle_tree.wsgi"
     volumes:
       - ./riddle_tree:/project/mystery
     ports:
       - "8000:8000"
     depends_on:
-      - setup
+      - db
+      - rabbitmq
+
     restart: always
 
   cashier:
@@ -62,5 +44,7 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - setup
+      - db
+      - rabbitmq
+
     restart: always

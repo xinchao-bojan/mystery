@@ -175,8 +175,8 @@ class ListAllPromptsView(generics.ListAPIView):
     queryset = Prompt.objects.all()
 
 
-class UpdateAnswerView(generics.DestroyAPIView):
-    serializer_class = AnswerAdminSerializer
+class UpdateAnswerView(generics.GenericAPIView):
+    serializer_class = AddAnswer
     permission_classes = (IsAdminUser,)
 
     def put(self, request, slug=None, pk=None):
@@ -192,6 +192,14 @@ class UpdateAnswerView(generics.DestroyAPIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response('This answer is not existing', status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, slug=None, pk=None):
+        question = get_object_or_404(Question, slug=slug)
+        answer = question.answers.filter(pk=pk)
+        if answer:
+            answer.delete()
+            return Response('Deleted', status=status.HTTP_200_OK)
+        return Response('Wrong id', status=status.HTTP_404_NOT_FOUND)
 
 
 class AddAnswerView(generics.GenericAPIView):
@@ -209,19 +217,6 @@ class AddAnswerView(generics.GenericAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(validator.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class DeleteAnswerView(generics.DestroyAPIView):
-    serializer_class = AnswerAdminSerializer
-    permission_classes = (IsAdminUser,)
-    queryset = Answer.objects.all()
-
-    def delete(self, request, slug=None, pk=None):
-        question = get_object_or_404(Question, slug=slug)
-        answer = question.answers.filter(pk=pk)
-        if answer:
-            answer.delete()
-            return Response('Deleted', status=status.HTTP_200_OK)
-        return Response('Wrong id', status=status.HTTP_404_NOT_FOUND)
 
 
 class GetPromocodeView(generics.RetrieveAPIView):
